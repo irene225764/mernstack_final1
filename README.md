@@ -165,16 +165,17 @@ The allowed categories are `Breakfast`, `Lunch`, `Dinner`, `Snack`, and `Dessert
 
 Codespaces assigns forwarded URLs to the ports. Start both services and open the forwarded frontend port 5173. In development, the Vite `/api` proxy forwards requests internally to port 5000, so port 5000 does not need to be made public. If you choose a direct forwarded backend URL instead, make that port accessible to the browser and configure `FRONTEND_URL` in `backend/.env` to the forwarded frontend origin. Restart the services after changing environment files.
 
-## Deploy to Railway
+## Deploy the Frontend to GitHub Pages
 
-The root `Dockerfile` packages the Vite production build and Express API into one Railway service. Express serves both the frontend and API from the same origin. `railway.json` configures the health check and restart policy.
+The `.github/workflows/deploy-pages.yml` workflow builds the React frontend and deploys it to GitHub Pages whenever a commit is pushed to `main`. GitHub Pages serves static files only; it cannot run the Express API or connect directly to MongoDB. Recipe operations require the API to be deployed separately, for example using the included Railway Docker configuration.
 
-1. Push this repository to GitHub.
-2. In Railway, create a project from the GitHub repository and deploy the root service. Railway detects the Dockerfile and builds the application.
-3. Add `MONGODB_URI` as a Railway service variable using your Atlas connection string. Never commit it or put it in a frontend variable.
-4. Generate a public domain for the service. When deployment finishes, open the domain and verify `/api/health` reports `database: connected`.
+1. Deploy the backend using the root `Dockerfile` on a Node-capable host, set `MONGODB_URI` as a server-side secret, and generate a public backend URL. Verify its `/api/health` endpoint reports `database: connected`.
+2. In the GitHub repository, open **Settings > Secrets and variables > Actions > Variables** and create the repository variable `VITE_API_URL`, set to the backend URL ending in `/api` (for example `https://your-api.example.com/api`). This URL is public frontend configuration, not a database credential.
+3. Open **Settings > Pages** and set the publishing source to **GitHub Actions**.
+4. Push to `main` or run **Deploy frontend to GitHub Pages** from the **Actions** tab. After the workflow succeeds, the site URL is `https://irene225764.github.io/mernstack_final1/`.
+5. If the backend restricts CORS, set its `FRONTEND_URL` to `https://irene225764.github.io`.
 
-Railway provides the runtime `PORT` variable, which the Express server uses automatically. Atlas Network Access must allow the deployed service to connect. Check Railway's current plan and pricing before deploying. For production data, restrict Atlas network access as appropriate and rotate credentials that have been shared outside the server configuration.
+The repository root `Dockerfile` and `railway.json` can deploy the API and frontend together on Railway instead. If using a separate API host, only deploy the backend there and point the Pages workflow at that API. Atlas Network Access must allow the backend host to connect. Check the backend provider's current plan and pricing before deploying; never place `MONGODB_URI` in GitHub Pages variables or frontend code.
 
 ## Troubleshooting
 
