@@ -165,16 +165,16 @@ The allowed categories are `Breakfast`, `Lunch`, `Dinner`, `Snack`, and `Dessert
 
 Codespaces assigns forwarded URLs to the ports. Start both services and open the forwarded frontend port 5173. In development, the Vite `/api` proxy forwards requests internally to port 5000, so port 5000 does not need to be made public. If you choose a direct forwarded backend URL instead, make that port accessible to the browser and configure `FRONTEND_URL` in `backend/.env` to the forwarded frontend origin. Restart the services after changing environment files.
 
-## Deploy to Render
+## Deploy to Railway
 
-The root `render.yaml` describes a single Render web service. Express serves the Vite production build and the API from the same public origin.
+The root `Dockerfile` packages the Vite production build and Express API into one Railway service. Express serves both the frontend and API from the same origin. `railway.json` configures the health check and restart policy.
 
 1. Push this repository to GitHub.
-2. In Render, choose **New > Blueprint**, connect this GitHub repository, and select the `render.yaml` Blueprint.
-3. When prompted, enter `MONGODB_URI` as a secret environment variable using your Atlas connection string. Never add it to the repository or a frontend variable.
-4. Deploy the Blueprint. Render builds the frontend and starts Express; when the service is live, open the Render URL and confirm `/api/health` reports `database: connected`.
+2. In Railway, create a project from the GitHub repository and deploy the root service. Railway detects the Dockerfile and builds the application.
+3. Add `MONGODB_URI` as a Railway service variable using your Atlas connection string. Never commit it or put it in a frontend variable.
+4. Generate a public domain for the service. When deployment finishes, open the domain and verify `/api/health` reports `database: connected`.
 
-The free web service may sleep when idle and take a short time to wake up. Atlas Network Access must allow connections from the deployed backend. For production data, restrict Atlas network access as appropriate and rotate any credentials that have been shared outside the server configuration.
+Railway provides the runtime `PORT` variable, which the Express server uses automatically. Atlas Network Access must allow the deployed service to connect. Check Railway's current plan and pricing before deploying. For production data, restrict Atlas network access as appropriate and rotate credentials that have been shared outside the server configuration.
 
 ## Troubleshooting
 
